@@ -17,3 +17,5 @@
 - City — город пользователя;
 - time — время начала прослушивания;
 - Day — день недели.
+
+[Проект в Colab](https://colab.research.google.com/drive/1EUTePXeClj68BYibNVRQhdS378wfqCuE?usp=sharing)
