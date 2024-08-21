@@ -140,3 +140,34 @@ WHERE c.id IN
        AND fr.is_first_round = 1
        AND fr.is_last_round = 1 );
 
+/* Задача 16/23 Посчитайте количество учебных заведений для каждого сотрудника из предыдущего задания. При подсчёте учитывайте, что некоторые сотрудники могли окончить одно и то же заведение дважды. */
+SELECT p.id AS employee_id,
+       COUNT(e.instituition) AS institutions_count
+FROM people p
+JOIN company c ON p.company_id = c.id
+JOIN education e ON p.id = e.person_id
+WHERE c.id IN
+    (SELECT DISTINCT c.id
+     FROM company c
+     JOIN funding_round fr ON c.id = fr.company_id
+     WHERE c.status = 'closed'
+       AND fr.is_first_round = 1
+       AND fr.is_last_round = 1 )
+GROUP BY p.id;
+
+/* Задача 17/23 Дополните предыдущий запрос и выведите среднее число учебных заведений (всех, не только уникальных), которые окончили сотрудники разных компаний. Нужно вывести только одну запись, группировка здесь не понадобится. */
+SELECT AVG(institutions_count) AS avg_institutions_per_employee
+FROM
+  (SELECT p.id AS employee_id,
+          COUNT(e.instituition) AS institutions_count
+   FROM people p
+   JOIN company c ON p.company_id = c.id
+   JOIN education e ON p.id = e.person_id
+   WHERE c.id IN
+       (SELECT DISTINCT c.id
+        FROM company c
+        JOIN funding_round fr ON c.id = fr.company_id
+        WHERE c.status = 'closed'
+          AND fr.is_first_round = 1
+          AND fr.is_last_round = 1 )
+   GROUP BY p.id) AS subquery;
