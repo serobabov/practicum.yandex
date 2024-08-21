@@ -171,3 +171,130 @@ FROM
           AND fr.is_first_round = 1
           AND fr.is_last_round = 1 )
    GROUP BY p.id) AS subquery;
+
+/* Задача 18/23  Напишите похожий запрос: выведите среднее число учебных заведений (всех, не только уникальных), которые окончили сотрудники Socialnet. */
+SELECT AVG(institutions_count) AS avg_institutions_per_employee
+FROM
+  (SELECT p.id AS employee_id,
+          COUNT(e.instituition) AS institutions_count
+   FROM people p
+   JOIN company c ON p.company_id = c.id
+   JOIN education e ON p.id = e.person_id
+   WHERE c.name = 'Socialnet'
+   GROUP BY p.id) AS subquery;
+
+/* Задача 19/23 Составьте таблицу из полей:
+- `name_of_fund` — название фонда;
+- `name_of_company` — название компании;
+- `amount` — сумма инвестиций, которую привлекла компания в раунде.
+В таблицу войдут данные о компаниях, в истории которых было больше шести важных этапов, а раунды финансирования проходили с 2012 по 2013 год включительно. */
+SELECT f.name AS name_of_fund,
+       c.name AS name_of_company,
+       fr.raised_amount AS amount
+FROM investment i
+JOIN company c ON i.company_id = c.id
+JOIN fund f ON i.fund_id = f.id
+JOIN funding_round fr ON i.funding_round_id = fr.id
+WHERE c.milestones > 6
+  AND fr.funded_at BETWEEN '2012-01-01' AND '2013-12-31';
+
+/* Задача 20/23 Выгрузите таблицу, в которой будут такие поля:
+- название компании-покупателя;
+- сумма сделки;
+- название компании, которую купили;
+- сумма инвестиций, вложенных в купленную компанию;
+- доля, которая отображает, во сколько раз сумма покупки превысила сумму вложенных в компанию инвестиций, округлённая до ближайшего целого числа.
+Не учитывайте те сделки, в которых сумма покупки равна нулю. Если сумма инвестиций в компанию равна нулю, исключите такую компанию из таблицы.
+Отсортируйте таблицу по сумме сделки от большей к меньшей, а затем по названию купленной компании в лексикографическом порядке. Ограничьте таблицу первыми десятью записями. */
+SELECT acquiring_company.name AS acquiring_company_name,
+       a.price_amount AS deal_amount,
+       acquired_company.name AS acquired_company_name,
+       acquired_company.funding_total AS total_investment,
+       ROUND(a.price_amount / acquired_company.funding_total) AS investment_ratio
+FROM acquisition a
+JOIN company acquiring_company ON a.acquiring_company_id = acquiring_company.id
+JOIN company acquired_company ON a.acquired_company_id = acquired_company.id
+WHERE a.price_amount > 0
+  AND acquired_company.funding_total > 0
+ORDER BY a.price_amount DESC,
+         acquired_company.name ASC
+LIMIT 10;
+
+/* Задача 21/23 Выгрузите таблицу, в которую войдут названия компаний из категории `social`, получившие финансирование с 2010 по 2013 год включительно. Проверьте, что сумма инвестиций не равна нулю. Выведите также номер месяца, в котором проходил раунд финансирования. */
+SELECT c.name AS company_name,
+       EXTRACT(MONTH
+               FROM fr.funded_at) AS funding_month
+FROM company c
+JOIN funding_round fr ON c.id = fr.company_id
+WHERE c.category_code = 'social'
+  AND fr.funded_at BETWEEN '2010-01-01' AND '2013-12-31'
+  AND fr.raised_amount <> 0;
+
+/* Задача 22/23 Отберите данные по месяцам с 2010 по 2013 год, когда проходили инвестиционные раунды. Сгруппируйте данные по номеру месяца и получите таблицу, в которой будут поля:
+- номер месяца, в котором проходили раунды;
+- количество уникальных названий фондов из США, которые инвестировали в этом месяце;
+- количество компаний, купленных за этот месяц;
+- общая сумма сделок по покупкам в этом месяце. */
+WITH InvestmentData AS
+  (SELECT EXTRACT(MONTH
+                  FROM fr.funded_at) AS MONTH,
+          f.id AS fund_id
+   FROM funding_round fr
+   JOIN investment i ON fr.id = i.funding_round_id
+   JOIN fund f ON i.fund_id = f.id
+   WHERE fr.funded_at BETWEEN '2010-01-01' AND '2013-12-31'
+     AND f.country_code = 'USA' ),
+     UniqueFunds AS
+  (SELECT MONTH,
+          COUNT(DISTINCT fund_id) AS unique_us_funds
+   FROM InvestmentData
+   GROUP BY MONTH),
+     AcquisitionData AS
+  (SELECT EXTRACT(MONTH
+                  FROM acquired_at) AS MONTH,
+          COUNT(acquired_company_id) AS acquired_companies,
+          SUM(price_amount) AS total_deal_amount
+   FROM acquisition
+   WHERE acquired_at BETWEEN '2010-01-01' AND '2013-12-31'
+   GROUP BY MONTH)
+SELECT uf.month,
+       uf.unique_us_funds,
+       COALESCE(ad.acquired_companies, 0) AS acquired_companies,
+       COALESCE(ad.total_deal_amount, 0) AS total_deal_amount
+FROM UniqueFunds uf
+LEFT JOIN AcquisitionData ad ON uf.month = ad.month
+ORDER BY uf.month;
+
+/* Задача 23/23 Составьте сводную таблицу и выведите среднюю сумму инвестиций для стран, в которых есть стартапы, зарегистрированные в 2011, 2012 и 2013 годах. Данные за каждый год должны быть в отдельном поле. Отсортируйте таблицу по среднему значению инвестиций за 2011 год от большего к меньшему. */
+WITH inv_2011 AS
+  (SELECT co.country_code,
+          AVG(co.funding_total)
+   FROM company AS co
+   WHERE EXTRACT(YEAR
+                 FROM co.founded_at) = 2011
+   GROUP BY co.country_code
+   HAVING COUNT(co.id) > 0),
+     inv_2012 AS
+  (SELECT co.country_code,
+          AVG(co.funding_total)
+   FROM company AS co
+   WHERE EXTRACT(YEAR
+                 FROM co.founded_at) = 2012
+   GROUP BY co.country_code
+   HAVING COUNT(co.id) > 0),
+     inv_2013 AS
+  (SELECT co.country_code,
+          AVG(co.funding_total)
+   FROM company AS co
+   WHERE EXTRACT(YEAR
+                 FROM co.founded_at) = 2013
+   GROUP BY co.country_code
+   HAVING COUNT(co.id) > 0)
+SELECT inv_2011.country_code,
+       inv_2011.avg AS inv_2011,
+       inv_2012.avg AS inv_2012,
+       inv_2013.avg AS inv_2013
+FROM inv_2011
+INNER JOIN inv_2012 ON inv_2012.country_code = inv_2011.country_code
+INNER JOIN inv_2013 ON inv_2013.country_code = inv_2011.country_code
+ORDER BY inv_2011.avg DESC;
