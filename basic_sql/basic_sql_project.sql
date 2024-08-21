@@ -73,3 +73,70 @@ FROM
    FROM fund) AS categorized_funds
 GROUP BY activity_category
 ORDER BY avg_investment_rounds ASC;
+
+/* Задача 10/23 Проанализируйте, в каких странах находятся фонды, которые чаще всего инвестируют в стартапы.
+Для каждой страны посчитайте минимальное, максимальное и среднее число компаний, в которые инвестировали фонды этой страны, основанные с 2010 по 2012 год включительно. Исключите страны с фондами, у которых минимальное число компаний, получивших инвестиции, равно нулю.
+Выгрузите десять самых активных стран-инвесторов: отсортируйте таблицу по среднему количеству компаний от большего к меньшему. Затем добавьте сортировку по коду страны в лексикографическом порядке. */
+SELECT country_code,
+       MIN(invested_companies) AS min_invested_companies,
+       MAX(invested_companies) AS max_invested_companies,
+       AVG(invested_companies) AS avg_invested_companies
+FROM fund
+WHERE founded_at BETWEEN '2010-01-01' AND '2012-12-31'
+GROUP BY country_code
+HAVING MIN(invested_companies) > 0
+ORDER BY avg_invested_companies DESC,
+         country_code ASC
+LIMIT 10;
+
+/* Задача 11/23 Отобразите имя и фамилию всех сотрудников стартапов. Добавьте поле с названием учебного заведения, которое окончил сотрудник, если эта информация известна. */
+SELECT p.first_name,
+       p.last_name,
+       e.instituition
+FROM people p
+LEFT JOIN education e ON p.id = e.person_id;
+
+/* Задача 12/23 Для каждой компании найдите количество учебных заведений, которые окончили её сотрудники. Выведите название компании и число уникальных названий учебных заведений. Составьте топ-5 компаний по количеству университетов. */
+SELECT c.name AS company_name,
+       COUNT(DISTINCT e.instituition) AS unique_institutions_count
+FROM people p
+JOIN education e ON p.id = e.person_id
+JOIN company c ON p.company_id = c.id
+GROUP BY c.name
+ORDER BY unique_institutions_count DESC
+LIMIT 5;
+
+/* Задача 13/23 Составьте список с уникальными названиями закрытых компаний, для которых первый раунд финансирования оказался последним. */
+SELECT DISTINCT c.name AS company_name
+FROM company c
+JOIN funding_round fr ON c.id = fr.company_id
+WHERE c.status = 'closed'
+  AND fr.is_first_round = 1
+  AND fr.is_last_round = 1;
+
+/* Задача 14/23 Составьте список уникальных номеров сотрудников, которые работают в компаниях, отобранных в предыдущем задании. */
+SELECT DISTINCT p.id AS employee_id
+FROM people p
+JOIN company c ON p.company_id = c.id
+WHERE c.id IN
+    (SELECT DISTINCT c.id
+     FROM company c
+     JOIN funding_round fr ON c.id = fr.company_id
+     WHERE c.status = 'closed'
+       AND fr.is_first_round = 1
+       AND fr.is_last_round = 1 );
+
+/* Задача 15/23 Составьте таблицу, куда войдут уникальные пары с номерами сотрудников из предыдущей задачи и учебным заведением, которое окончил сотрудник. */
+SELECT DISTINCT p.id AS employee_id,
+                e.instituition AS education_institution
+FROM people p
+JOIN company c ON p.company_id = c.id
+JOIN education e ON p.id = e.person_id
+WHERE c.id IN
+    (SELECT DISTINCT c.id
+     FROM company c
+     JOIN funding_round fr ON c.id = fr.company_id
+     WHERE c.status = 'closed'
+       AND fr.is_first_round = 1
+       AND fr.is_last_round = 1 );
+
