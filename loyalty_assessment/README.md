@@ -33,5 +33,5 @@
 Результаты исследования позволили определить текущий уровень NPS среди клиентов компании и выявить ключевые группы пользователей, влияющие на общие показатели лояльности. Эти данные могут быть использованы для разработки стратегий по улучшению клиентского сервиса и повышению уровня лояльности.
 
 ---
-[Проект в Colab](https://colab.research.google.com/drive/1fS3eiE3AUTOKNlJnhVTiKB80_NEWEqa2?usp=sharing)
-[Дашборд в Tableau](https://public.tableau.com/views/2_17226365750670/sheet0?:language=en-US&publish=yes&:sid=&:redirect=auth&:display_count=n&:origin=viz_share_link)
+- [Проект в Colab](https://colab.research.google.com/drive/1fS3eiE3AUTOKNlJnhVTiKB80_NEWEqa2?usp=sharing)
+- [Дашборд в Tableau](https://public.tableau.com/views/2_17226365750670/sheet0?:language=en-US&publish=yes&:sid=&:redirect=auth&:display_count=n&:origin=viz_share_link)
