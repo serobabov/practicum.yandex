@@ -2,20 +2,20 @@
 Проект посвящён статистическому анализу данных для сервиса аренды самокатов GoFast, который предоставляет пользователям возможность арендовать самокаты через мобильное приложение. Цель исследования — изучить поведение пользователей, выявить ключевые тенденции и проверить гипотезы, которые могут способствовать развитию бизнеса и увеличению доходности.
 
 ### Описание данных:
-**Пользователи** (users_go.csv)
+**Пользователи** ([users_go.csv](https://github.com/serobabov/practicum.yandex/tree/dfcfd58d57891da90d71b5baa5ff236b84aaa90d/stat_data_analysis/users_go.csv))
 - user_id - уникальный идентификатор пользователя
 - name - имя пользователя
 - age  - возраст
 - city  - город
 - subscription_type - тип подписки (free, ultra)
 
-**Поездки** (rides_go.csv)
+**Поездки** ([rides_go.csv](https://github.com/serobabov/practicum.yandex/tree/dfcfd58d57891da90d71b5baa5ff236b84aaa90d/stat_data_analysis/rides_go.csv))
 - user_id - уникальный идентификатор пользователя
 - distance  - расстояние, которое пользователь проехал в текущей сессии (в метрах)
 - duration - продолжительность сессии (в минутах) — время с того момента, как пользователь нажал кнопку «Начать поездку» до момента, как он нажал кнопку «Завершить поездку»
 - date - дата совершения поездки
 
-**Подписки** (subscriptions_go.csv)
+**Подписки** ([subscriptions_go.csv](https://github.com/serobabov/practicum.yandex/tree/dfcfd58d57891da90d71b5baa5ff236b84aaa90d/stat_data_analysis/subscriptions_go.csv))
 - subscription_type - тип подписки
 - minute_price - стоимость одной минуты поездки по данной подписке
 - start_ride_price - стоимость начала поездки
